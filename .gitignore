@@ -1,0 +1,13 @@
+.idea
+target/
+keys/
+
+.classpath
+.project
+.settings/
+build/
+out/
+*.iml
+.vscode/
+.gradle/
+
