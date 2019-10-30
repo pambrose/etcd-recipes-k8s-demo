@@ -62,14 +62,14 @@ class Basics {
             val keepAliveLatch = CountDownLatch(1)
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
 
-            val cache = PathChildrenCache(urls, path)
+            val cache = PathChildrenCache(urls, idPath)
             cache.start(true)
 
             val httpServer =
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondWith("index.html requested here 1.0.2")
+                            call.respondWith("index.html requested here 1.0.3")
                         }
                         get("/id") {
                             call.respondWith("Id: $id")
