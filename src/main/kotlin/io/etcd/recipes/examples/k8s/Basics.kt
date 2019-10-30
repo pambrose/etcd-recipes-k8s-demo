@@ -2,8 +2,10 @@ package io.etcd.recipes.examples.k8s
 
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
+import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.*
 import io.etcd.recipes.counter.DistributedAtomicLong
+import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -12,13 +14,13 @@ import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
-import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import mu.KLogging
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.InetAddress
 import java.net.UnknownHostException
+import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.time.seconds
 
@@ -41,27 +43,40 @@ val hostInfo by lazy {
     }
 }
 
+suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = ContentType.Text.Plain) {
+    apply {
+        response.header("cache-control", "must-revalidate,no-cache,no-store")
+        response.status(HttpStatusCode.OK)
+        respondText(str, contentType)
+    }
+}
+
 class Basics {
     companion object : KLogging() {
         @JvmStatic
         fun main(args: Array<String>) {
-            val urls = listOf("http://etcd0:2379")
+            val urls = listOf("http://etcd-client:2379")
             val path = "/testkey"
+            val idPath = "/clients"
             val id = randomId()
-
+            val keepAliveLatch = CountDownLatch(1)
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
-            val httpServer: CIOApplicationEngine =
+
+            val cache = PathChildrenCache(urls, path)
+            cache.start(true)
+
+            val httpServer =
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondText("index.html requested", ContentType.Text.Plain)
+                            call.respondWith("index.html requested here 1.0.2")
                         }
                         get("/id") {
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Id = $id", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Id: $id")
+                        }
+                        get("/clients") {
+                            val data = cache.currentData.map { it.key }
+                            call.respondWith("Clients: $data")
                         }
                         get("/testurl") {
                             var msg = "Success";
@@ -74,11 +89,7 @@ class Basics {
                             } catch (e: Throwable) {
                                 msg = e.stackTraceAsString
                             }
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Test result: $msg", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Test result: $msg")
                         }
                         get("/set") {
                             connectToEtcd(urls) { client ->
@@ -86,11 +97,7 @@ class Basics {
                                     kvClient.putValue(path, "This is a test")
                                 }
                             }
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Key $path set", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Key $path set")
                         }
                         get("/get") {
                             var kval = "";
@@ -99,11 +106,7 @@ class Basics {
                                     kval = kvClient.getValue(path, "key $path not found")
                                 }
                             }
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Key value = $kval", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Key value = $kval")
                         }
                         get("/delete") {
                             connectToEtcd(urls) { client ->
@@ -111,36 +114,25 @@ class Basics {
                                     kvClient.delete(path)
                                 }
                             }
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Key $path deleted", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Key $path deleted")
                         }
                         get("/count") {
                             val cnt = DistributedAtomicLong(urls, path).get()
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText("Count = $cnt", ContentType.Text.Plain)
-                            }
+                            call.respondWith("Count = $cnt")
                         }
                         get("/hostinfo") {
-                            val cnt = DistributedAtomicLong(urls, path).get()
-                            call.apply {
-                                response.header("cache-control", "must-revalidate,no-cache,no-store")
-                                response.status(HttpStatusCode.OK)
-                                respondText(hostInfo.toString(), ContentType.Text.Plain)
-                            }
+                            call.respondWith(hostInfo.toString())
                         }
                         get("/terminate") {
+                            cache.close()
+                            keepAliveLatch.countDown()
                             System.exit(1)
                         }
                     }
                 }
 
             thread {
-                var msg = "";
+                val msg: String
                 try {
                     DistributedAtomicLong(urls, path)
                         .use { counter ->
@@ -151,6 +143,17 @@ class Basics {
                         }
                 } catch (e: Throwable) {
                     msg = e.stackTraceAsString
+                    logger.info(e) { msg }
+                }
+            }
+
+            thread {
+                connectToEtcd(urls) { client ->
+                    client.withKvClient { kvClient ->
+                        kvClient.putValueWithKeepAlive(client, "$idPath/$id", id, 2) {
+                            keepAliveLatch.await()
+                        }
+                    }
                 }
             }
 

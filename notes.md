@@ -1,4 +1,7 @@
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.0
+https://github.com/etcd-io/etcd/tree/master/hack/kubernetes-deploy
+
+```bash 
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.2
 
 kubectl expose deployment recipe --type=NodePort --port=8080
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
@@ -13,3 +16,4 @@ kubectl scale deployment recipe --replicas=3
 // Open url for service
 minikube service recipe
 minikube service recipe --url
+```
