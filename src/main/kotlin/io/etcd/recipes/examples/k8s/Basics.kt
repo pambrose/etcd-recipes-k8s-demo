@@ -45,6 +45,9 @@ class Basics {
             val finishLatch = CountDownLatch(1)
             val endCounter = BooleanMonitor(false)
             val startTime = LocalDateTime.now()
+            val version = "1.0.9"
+
+            logger.info("Starting client $id $hostInfo")
 
             val cache = PathChildrenCache(urls, idPath)
             cache.start(true)
@@ -70,7 +73,12 @@ class Basics {
             thread {
                 connectToEtcd(urls) { client ->
                     client.withKvClient { kvClient ->
-                        kvClient.putValueWithKeepAlive(client, "$idPath/$id", "$id $hostInfo $startTime", 2) {
+                        kvClient.putValueWithKeepAlive(
+                            client,
+                            "$idPath/$id",
+                            "$id ${hostInfo.first} $version $startTime",
+                            2
+                        ) {
                             keepAliveLatch.await()
                         }
                     }
@@ -81,16 +89,16 @@ class Basics {
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondWith("index.html requested here 1.0.5")
+                            call.respondWith("Version $version")
                         }
                         get("/id") {
-                            call.respondWith("Id: $id")
+                            call.respondWith("Id: $id $hostInfo")
                         }
                         get("/clients") {
                             val data = cache.currentData.map { it.value.asString }.sorted().joinToString("\n")
-                            call.respondWith("Clients:\n$data")
+                            call.respondWith("Clients (from $id $hostInfo):\n$data")
                         }
-                        get("/testurl") {
+                        get("/ping") {
                             var msg = "Success";
                             try {
                                 connectToEtcd(urls) { client ->
@@ -101,7 +109,7 @@ class Basics {
                             } catch (e: Throwable) {
                                 msg = e.stackTraceAsString
                             }
-                            call.respondWith("Test result: $msg")
+                            call.respondWith("Ping result: $msg")
                         }
                         get("/set") {
                             connectToEtcd(urls) { client ->
@@ -132,9 +140,6 @@ class Basics {
                             val cnt = DistributedAtomicLong(urls, path).get()
                             call.respondWith("Count = $cnt")
                         }
-                        get("/hostinfo") {
-                            call.respondWith(hostInfo.toString())
-                        }
                         get("/terminate") {
                             thread {
                                 sleep(1.seconds)
@@ -143,7 +148,8 @@ class Basics {
                                 keepAliveLatch.countDown()
                                 finishLatch.countDown()
                             }
-                            call.respondWith("Shutting down client...")
+                            logger.info("Terminating client $id $hostInfo")
+                            call.respondWith("Terminating client $id $hostInfo")
                         }
                     }
                 }
@@ -151,6 +157,8 @@ class Basics {
             httpServer.start(wait = false)
 
             finishLatch.await()
+
+            logger.info("Shutting down client $id $hostInfo")
         }
     }
 }
