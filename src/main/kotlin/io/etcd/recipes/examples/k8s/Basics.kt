@@ -1,7 +1,10 @@
 package io.etcd.recipes.examples.k8s
 
+import com.sudothought.common.concurrent.BooleanMonitor
+import com.sudothought.common.util.hostInfo
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
+import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.*
 import io.etcd.recipes.counter.DistributedAtomicLong
@@ -16,32 +19,10 @@ import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import mu.KLogging
-import java.io.PrintWriter
-import java.io.StringWriter
-import java.net.InetAddress
-import java.net.UnknownHostException
+import java.time.LocalDateTime
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.time.seconds
-
-val Throwable.stackTraceAsString: String
-    get() {
-        val sw = StringWriter()
-        val pw = PrintWriter(sw)
-        printStackTrace(pw)
-        return sw.toString()
-    }
-
-val hostInfo by lazy {
-    try {
-        val hostname = InetAddress.getLocalHost().hostName!!
-        val address = InetAddress.getLocalHost().hostAddress!!
-        //logger.debug { "Hostname: $hostname Address: $address" }
-        Pair(hostname, address)
-    } catch (e: UnknownHostException) {
-        Pair("Unknown", "Unknown")
-    }
-}
 
 suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = ContentType.Text.Plain) {
     apply {
@@ -55,28 +36,59 @@ class Basics {
     companion object : KLogging() {
         @JvmStatic
         fun main(args: Array<String>) {
+            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
             val urls = listOf("http://etcd-client:2379")
-            val path = "/testkey"
+            val path = "/counter/basics"
             val idPath = "/clients"
             val id = randomId()
             val keepAliveLatch = CountDownLatch(1)
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
+            val finishLatch = CountDownLatch(1)
+            val endCounter = BooleanMonitor(false)
+            val startTime = LocalDateTime.now()
 
             val cache = PathChildrenCache(urls, idPath)
             cache.start(true)
+
+            thread {
+                val msg: String
+                try {
+                    DistributedAtomicLong(urls, path)
+                        .use { counter ->
+                            while (true) {
+                                counter.increment()
+                                if (endCounter.get())
+                                    break
+                                sleep(1.seconds)
+                            }
+                        }
+                } catch (e: Throwable) {
+                    msg = e.stackTraceAsString
+                    logger.info(e) { msg }
+                }
+            }
+
+            thread {
+                connectToEtcd(urls) { client ->
+                    client.withKvClient { kvClient ->
+                        kvClient.putValueWithKeepAlive(client, "$idPath/$id", "$id $hostInfo $startTime", 2) {
+                            keepAliveLatch.await()
+                        }
+                    }
+                }
+            }
 
             val httpServer =
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondWith("index.html requested here 1.0.3")
+                            call.respondWith("index.html requested here 1.0.5")
                         }
                         get("/id") {
                             call.respondWith("Id: $id")
                         }
                         get("/clients") {
-                            val data = cache.currentData.map { it.key }
-                            call.respondWith("Clients: $data")
+                            val data = cache.currentData.map { it.value.asString }.sorted().joinToString("\n")
+                            call.respondWith("Clients:\n$data")
                         }
                         get("/testurl") {
                             var msg = "Success";
@@ -124,40 +136,21 @@ class Basics {
                             call.respondWith(hostInfo.toString())
                         }
                         get("/terminate") {
-                            cache.close()
-                            keepAliveLatch.countDown()
-                            System.exit(1)
-                        }
-                    }
-                }
-
-            thread {
-                val msg: String
-                try {
-                    DistributedAtomicLong(urls, path)
-                        .use { counter ->
-                            while (true) {
-                                counter.increment()
+                            thread {
                                 sleep(1.seconds)
+                                endCounter.set(true)
+                                cache.close()
+                                keepAliveLatch.countDown()
+                                finishLatch.countDown()
                             }
-                        }
-                } catch (e: Throwable) {
-                    msg = e.stackTraceAsString
-                    logger.info(e) { msg }
-                }
-            }
-
-            thread {
-                connectToEtcd(urls) { client ->
-                    client.withKvClient { kvClient ->
-                        kvClient.putValueWithKeepAlive(client, "$idPath/$id", id, 2) {
-                            keepAliveLatch.await()
+                            call.respondWith("Shutting down client...")
                         }
                     }
                 }
-            }
 
-            httpServer.start(wait = true)
+            httpServer.start(wait = false)
+
+            finishLatch.await()
         }
     }
 }

@@ -11,7 +11,7 @@ RUN chown -R $APPLICATION_USER /app
 # Mark this container to use the specified $APPLICATION_USER
 USER $APPLICATION_USER
 
-COPY ./build/libs/etcd-recipes-k8s-demo-1.0.3-all.jar /app/etcd-recipes-k8s-demo-all.jar
+COPY ./build/libs/etcd-recipes-k8s-demo-1.0.5-all.jar /app/etcd-recipes-k8s-demo-all.jar
 WORKDIR /app
 
 EXPOSE 8080
