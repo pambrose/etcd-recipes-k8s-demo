@@ -45,7 +45,7 @@ class Basics {
             val finishLatch = CountDownLatch(1)
             val endCounter = BooleanMonitor(false)
             val startTime = LocalDateTime.now()
-            val version = "1.0.9"
+            val version = "1.0.10"
 
             logger.info("Starting client $id $hostInfo")
 
@@ -76,7 +76,7 @@ class Basics {
                         kvClient.putValueWithKeepAlive(
                             client,
                             "$idPath/$id",
-                            "$id ${hostInfo.first} $version $startTime",
+                            "$id ${hostInfo.first} [${hostInfo.second}] $version $startTime",
                             2
                         ) {
                             keepAliveLatch.await()
@@ -95,8 +95,11 @@ class Basics {
                             call.respondWith("Id: $id $hostInfo")
                         }
                         get("/clients") {
-                            val data = cache.currentData.map { it.value.asString }.sorted().joinToString("\n")
-                            call.respondWith("Clients (from $id $hostInfo):\n$data")
+                            val data =
+                                cache.currentData
+                                    .map { it.value.asString }.sorted()
+                                    .mapIndexed { i, s -> "${i + 1}: $s" }
+                            call.respondWith("${data.size} Clients:\n${data.joinToString("\n")}\n\nReported by: $id")
                         }
                         get("/ping") {
                             var msg = "Success";
