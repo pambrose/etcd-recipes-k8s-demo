@@ -6,7 +6,13 @@ import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.cache.PathChildrenCache
-import io.etcd.recipes.common.*
+import io.etcd.recipes.common.asString
+import io.etcd.recipes.common.connectToEtcd
+import io.etcd.recipes.common.delete
+import io.etcd.recipes.common.getValue
+import io.etcd.recipes.common.putValue
+import io.etcd.recipes.common.putValueWithKeepAlive
+import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
@@ -20,6 +26,8 @@ import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import mu.KLogging
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.time.seconds
@@ -37,20 +45,21 @@ class Basics {
         @JvmStatic
         fun main(args: Array<String>) {
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
-            val urls = listOf("http://etcd-client:2379")
+            val urls = listOf("http://etcd-client:2379", "http://localhost:2379")
             val path = "/counter/basics"
             val idPath = "/clients"
             val id = randomId()
             val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val endCounter = BooleanMonitor(false)
-            val startTime = LocalDateTime.now()
-            val version = "1.0.10"
+            val startTime =
+                LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("M/d/y H:m:ss").withZone(ZoneId.of("America/Los_Angeles")))
+            val version = "1.0.13"
 
             logger.info("Starting client $id $hostInfo")
 
-            val cache = PathChildrenCache(urls, idPath)
-            cache.start(true)
+            val cache = PathChildrenCache(urls, idPath).start(true)
 
             thread {
                 val msg: String
@@ -73,12 +82,10 @@ class Basics {
             thread {
                 connectToEtcd(urls) { client ->
                     client.withKvClient { kvClient ->
-                        kvClient.putValueWithKeepAlive(
-                            client,
-                            "$idPath/$id",
-                            "$id ${hostInfo.first} [${hostInfo.second}] $version $startTime",
-                            2
-                        ) {
+                        kvClient.putValueWithKeepAlive(client,
+                                                       "$idPath/$id",
+                                                       "$id ${hostInfo.first} [${hostInfo.second}] $version $startTime",
+                                                       2) {
                             keepAliveLatch.await()
                         }
                     }
@@ -98,8 +105,8 @@ class Basics {
                             val data =
                                 cache.currentData
                                     .map { it.value.asString }.sorted()
-                                    .mapIndexed { i, s -> "${i + 1}: $s" }
-                            call.respondWith("${data.size} Clients:\n${data.joinToString("\n")}\n\nReported by: $id")
+                                    .mapIndexed { i, s -> "${i + 1}) $s" }
+                            call.respondWith("${data.size} Clients:\n${data.joinToString("\n")}\n\nReported by: $id ${hostInfo.first} [${hostInfo.second}]")
                         }
                         get("/ping") {
                             var msg = "Success";
@@ -151,8 +158,9 @@ class Basics {
                                 keepAliveLatch.countDown()
                                 finishLatch.countDown()
                             }
-                            logger.info("Terminating client $id $hostInfo")
-                            call.respondWith("Terminating client $id $hostInfo")
+                            val msg = "Terminating client $id $hostInfo"
+                            logger.info(msg)
+                            call.respondWith(msg)
                         }
                     }
                 }
