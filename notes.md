@@ -1,4 +1,5 @@
 # Links
+* [Creating a Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
 * [Service Discovery](http://kubernetesbyexample.com/sd/)
 
 ```bash 
@@ -67,4 +68,9 @@ kubectl exec pod_name -c shell -i -t -- /bin/bash
 ## Supported API versions
 ```bash
 kubectl api-versions
+```
+
+## Edit a deployment
+```bash
+kubectl edit deploy/sise-deploy
 ```

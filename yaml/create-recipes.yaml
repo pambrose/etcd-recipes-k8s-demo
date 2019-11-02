@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sise-deploy
+  name: etcd-recipes-deploy
   labels:
-    app: sise
+    app: etcd-recipes
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: sise
+      app: etcd-recipes
   template:
     metadata:
       labels:
-        app: sise
+        app: etcd-recipes
     spec:
       containers:
-        - name: sise
-          image: mhausenblas/simpleservice:0.5.0
+        - name: etcd-recipes
+          image: pambrose/etcd-recipes-k8s-example:1.0.13
           ports:
             - containerPort: 9876
           env:
             - name: SIMPLE_SERVICE_VERSION
-              value: "0.9"
+              value: "0.1"
