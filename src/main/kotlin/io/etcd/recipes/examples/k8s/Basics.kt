@@ -55,7 +55,7 @@ class Basics {
             val startTime =
                 LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("M/d/y H:m:ss").withZone(ZoneId.of("America/Los_Angeles")))
-            val version = "1.0.13"
+            val version = "1.0.14"
 
             logger.info("Starting client $id $hostInfo")
 
@@ -106,7 +106,7 @@ class Basics {
                                 cache.currentData
                                     .map { it.value.asString }.sorted()
                                     .mapIndexed { i, s -> "${i + 1}) $s" }
-                            call.respondWith("${data.size} Clients:\n${data.joinToString("\n")}\n\nReported by: $id ${hostInfo.first} [${hostInfo.second}]")
+                            call.respondWith("${data.size} clients:\n${data.joinToString("\n")}\n\nReported by: $id ${hostInfo.first} [${hostInfo.second}]")
                         }
                         get("/ping") {
                             var msg = "Success";

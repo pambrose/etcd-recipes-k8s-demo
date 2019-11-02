@@ -3,7 +3,7 @@
 * [Service Discovery](http://kubernetesbyexample.com/sd/)
 
 ```bash 
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.13
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.14
 
 kubectl expose deployment recipe --type=NodePort --port=8080
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
@@ -22,7 +22,7 @@ minikube service recipe --url
 
 ## Creating new cluster
 ```bash
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.13
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.14
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
 kubectl scale deployment recipe --replicas=3
 ```
@@ -31,6 +31,17 @@ kubectl scale deployment recipe --replicas=3
 https://github.com/etcd-io/etcd/tree/master/hack/kubernetes-deploy
 ```bash
 kubectl create -f https://raw.githubusercontent.com/etcd-io/etcd/master/hack/kubernetes-deploy/etcd.yml
+```
+
+## Installing etcd-recipes
+```bash
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
+kubectl delete deployment etcd-recipes-deploy
+```
+
+## Edit a deployment
+```bash
+kubectl edit deploy/etcd-recipes-deploy
 ```
 
 ## Installing istio
@@ -68,9 +79,4 @@ kubectl exec pod_name -c shell -i -t -- /bin/bash
 ## Supported API versions
 ```bash
 kubectl api-versions
-```
-
-## Edit a deployment
-```bash
-kubectl edit deploy/sise-deploy
 ```
