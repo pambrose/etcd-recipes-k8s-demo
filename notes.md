@@ -3,7 +3,7 @@
 * [Service Discovery](http://kubernetesbyexample.com/sd/)
 
 ```bash 
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.14
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.15
 
 kubectl expose deployment recipe --type=NodePort --port=8080
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
@@ -20,28 +20,43 @@ minikube service recipe
 minikube service recipe --url
 ```
 
-## Creating new cluster
+## Running minkube
 ```bash
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.14
+minikube start --memory=4096 --disk-size=30g --kubernetes-version=v1.16.2
+minikube dashboard
+minikube stop
+minikube delete
+```
+
+## Installing etcd-recipes with commands
+```bash
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.15
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
 kubectl scale deployment recipe --replicas=3
+```
+
+## Installing etcd-recipes with scripts
+```bash
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
+minikube service recipes-service
+kubectl delete deployment recipes-deploy
+kubectl delete service recipes-service
+```
+
+## View logs
+```bash
+kubectl logs node_name
+```
+
+## Edit a deployment
+```bash
+kubectl edit deploy/etcd-recipes-deploy
 ```
 
 ## Installing etcd
 https://github.com/etcd-io/etcd/tree/master/hack/kubernetes-deploy
 ```bash
 kubectl create -f https://raw.githubusercontent.com/etcd-io/etcd/master/hack/kubernetes-deploy/etcd.yml
-```
-
-## Installing etcd-recipes
-```bash
-kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
-kubectl delete deployment etcd-recipes-deploy
-```
-
-## Edit a deployment
-```bash
-kubectl edit deploy/etcd-recipes-deploy
 ```
 
 ## Installing istio
@@ -60,14 +75,6 @@ bash <(curl -L https://git.io/getLatestKialiOperator) --accessible-namespaces '*
 
 kubectl expose deployment kiali-operator --type=NodePort --port=8081
 
-```
-
-## Running minkube
-```bash
-minikube start --memory=4096 --disk-size=30g --kubernetes-version=v1.16.2
-minikube dashboard
-minikube stop
-minikube delete
 ```
 
 ## Connecting to a Pod

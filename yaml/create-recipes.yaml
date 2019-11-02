@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: etcd-recipes-deploy
+  name: recipes-deploy
   labels:
     app: etcd-recipes
 spec:
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: etcd-recipes
-          image: pambrose/etcd-recipes-k8s-example:1.0.14
+          image: pambrose/etcd-recipes-k8s-example:1.0.15
           ports:
             - containerPort: 8080
           env:
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: etcd-recipes-service
+  name: recipes-service
 spec:
   selector:
     app: etcd-recipes

@@ -9,6 +9,7 @@ import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.asString
 import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.delete
+import io.etcd.recipes.common.getChildrenKeys
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
 import io.etcd.recipes.common.putValueWithKeepAlive
@@ -55,7 +56,7 @@ class Basics {
             val startTime =
                 LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("M/d/y H:m:ss").withZone(ZoneId.of("America/Los_Angeles")))
-            val version = "1.0.14"
+            val version = "1.0.15"
 
             logger.info("Starting client $id $hostInfo")
 
@@ -149,6 +150,15 @@ class Basics {
                         get("/count") {
                             val cnt = DistributedAtomicLong(urls, path).get()
                             call.respondWith("Count = $cnt")
+                        }
+                        get("/keys") {
+                            var keys = ""
+                            connectToEtcd(urls) { client ->
+                                client.withKvClient { kvClient ->
+                                    keys = kvClient.getChildrenKeys("/").sorted().joinToString("\n")
+                                }
+                            }
+                            call.respondWith("Keys:\n$keys")
                         }
                         get("/terminate") {
                             thread {
