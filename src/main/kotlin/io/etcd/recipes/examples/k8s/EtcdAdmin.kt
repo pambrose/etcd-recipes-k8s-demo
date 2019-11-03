@@ -28,7 +28,7 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : KLogging() {
-        const val VERSION = "1.0.1"
+        const val VERSION = "1.0.2"
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -101,7 +101,7 @@ class EtcdAdmin {
                             etcdExec(urls) { kval = it.getValue(msgPath, "$msgPath not present") }
                             call.respondWith("Leader: $kval")
                         }
-                        get("/participants") {
+                        get("/election") {
 
                             val participants = getParticipants(urls, electionPath)
                             val data =

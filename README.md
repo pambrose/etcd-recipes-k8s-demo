@@ -1,6 +1,6 @@
 # etcd-recipes K8s Examples
 
-## Running minkube
+## Setup minkube
 ```bash
 minikube start --memory=4096 --disk-size=30g --kubernetes-version=v1.16.2
 minikube dashboard
@@ -10,7 +10,7 @@ minikube delete
 eval $(minikube docker-env)
 ```
 
-## Installing recipes with scripts
+## Install recipes with scripts
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-admin.yaml
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-election.yaml
@@ -28,9 +28,7 @@ kubectl delete service counter-service
 
 ## View logs
 ```bash
-kubectl logs admin-deploy
-kubectl logs election-deploy
-kubectl logs counter-deploy
+kubectl logs pod_name
 ```
 
 ## Edit a deployment
@@ -80,7 +78,7 @@ kubectl api-versions
 
 ```bash 
 
-kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.1
+kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.2
 kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
 kubectl scale deployment etcd-admin --replicas=3
 

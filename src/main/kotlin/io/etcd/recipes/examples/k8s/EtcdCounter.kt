@@ -24,7 +24,7 @@ import kotlin.time.seconds
 
 class EtcdCounter {
     companion object : KLogging() {
-        const val VERSION = "1.0.1"
+        const val VERSION = "1.0.2"
 
         @JvmStatic
         fun main(args: Array<String>) {

@@ -90,7 +90,7 @@ task adminJar(type: Jar, dependsOn: shadowJar) {
 task electionJar(type: Jar, dependsOn: shadowJar) {
     archiveFileName = 'etcd-election.jar'
     manifest {
-        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdElection')
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdLeader')
     }
     from zipTree(shadowJar.archiveFile)
 }

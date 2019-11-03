@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: etcd-counter
-          image: pambrose/etcd-counter:1.0.1
+          image: pambrose/etcd-counter:1.0.2
           ports:
             - containerPort: 8082
           env:
