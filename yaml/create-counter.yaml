@@ -18,7 +18,7 @@ spec:
         - name: etcd-counter
           image: pambrose/etcd-counter:1.0.1
           ports:
-            - containerPort: 8081
+            - containerPort: 8082
           env:
             - name: SIMPLE_SERVICE_VERSION
               value: "0.1"

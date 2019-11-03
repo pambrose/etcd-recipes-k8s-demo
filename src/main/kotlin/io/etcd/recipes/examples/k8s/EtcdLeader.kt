@@ -30,7 +30,7 @@ class EtcdLeader {
         fun main(args: Array<String>) {
             val id = randomId()
             val className = EtcdLeader::class.java.simpleName
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8082")
+            val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
             val finishLatch = CountDownLatch(1)
             val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
             val desc = "$className $id ${hostInfo.first} [${hostInfo.second}] $VERSION $startTime"
