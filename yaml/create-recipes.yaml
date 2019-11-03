@@ -56,7 +56,7 @@ spec:
         app: etcd-election
     spec:
       containers:
-        - name: etcd-admin
+        - name: etcd-election
           image: pambrose/etcd-election:1.0.0
           ports:
             - containerPort: 8081
