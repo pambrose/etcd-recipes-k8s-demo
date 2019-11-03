@@ -17,6 +17,7 @@ import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.etcd.recipes.election.LeaderSelector.Companion.getParticipants
 import io.ktor.application.call
+import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
@@ -46,7 +47,7 @@ class EtcdAdmin {
             val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
             val desc = "$className $id ${hostInfo.first} [${hostInfo.second}] $VERSION $startTime"
 
-            logger.info("Starting $desc")
+            logger.info { "Starting $desc" }
 
             val cache = PathChildrenCache(urls, clientPath).start(true)
 
@@ -80,7 +81,7 @@ class EtcdAdmin {
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondWith("Version: $VERSION $desc")
+                            call.respondRedirect("/version", permanent = true)
                         }
                         get("/version") {
                             call.respondWith("Version: $VERSION")
@@ -103,7 +104,7 @@ class EtcdAdmin {
                         }
                         get("/get") {
                             var kval = "";
-                            etcdExec(urls) { kval = it.getValue(demoPath, "key $demoPath not present") }
+                            etcdExec(urls) { kval = it.getValue(demoPath, "$demoPath not present") }
                             call.respondWith("Key value = $kval")
                         }
                         get("/delete") {
@@ -114,17 +115,22 @@ class EtcdAdmin {
                             val cnt = DistributedAtomicLong(urls, demoPath).get()
                             call.respondWith("Count = $cnt")
                         }
-                        get("/keys") {
+                        get("/dump") {
                             var keys = emptyList<String>()
                             etcdExec(urls) { keys = it.getChildrenKeys("/").sorted() }
                             call.respondWith("${keys.size} keys:\n\n${keys.joinToString("\n")}")
                         }
-                        get("/clients") {
+                        get("/admins") {
                             val data =
                                 cache.currentData
                                     .map { it.value.asString }.sorted()
                                     .mapIndexed { i, s -> "${i + 1}) $s" }
-                            call.respondWith("${data.size} clients:\n${data.joinToString("\n")}\n\nReported by: $desc")
+                            call.respondWith("${data.size} admins:\n${data.joinToString("\n")}\n\nReported by: $desc")
+                        }
+                        get("/leader") {
+                            var kval = "";
+                            etcdExec(urls) { kval = it.getValue(msgPath, "$msgPath not present") }
+                            call.respondWith("Leader: $kval")
                         }
                         get("/participants") {
 
@@ -144,7 +150,7 @@ class EtcdAdmin {
                                 finishLatch.countDown()
                             }
                             val msg = "Terminating $desc"
-                            logger.info(msg)
+                            logger.info { msg }
                             call.respondWith(msg)
                         }
                     }
@@ -154,7 +160,7 @@ class EtcdAdmin {
 
             finishLatch.await()
 
-            logger.info("Shutting down $desc")
+            logger.info { "Shutting down $desc" }
         }
     }
 }

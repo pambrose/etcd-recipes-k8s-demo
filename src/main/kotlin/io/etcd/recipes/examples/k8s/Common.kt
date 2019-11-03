@@ -13,6 +13,7 @@ const val TZ = "America/Los_Angeles"
 const val FMT = "M/d/y H:m:ss"
 const val clientPath = "/clients"
 const val electionPath = "/election/k8s-demo"
+const val msgPath = "/msgs/leader"
 
 val urls = listOf("http://etcd-client:2379", "http://localhost:2379")
 

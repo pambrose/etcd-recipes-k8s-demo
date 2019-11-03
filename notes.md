@@ -3,21 +3,20 @@
 * [Service Discovery](http://kubernetesbyexample.com/sd/)
 
 ```bash 
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.16
 
-kubectl expose deployment recipe --type=NodePort --port=8080
-kubectl expose deployment recipe --type=LoadBalancer --port=8080
+kubectl expose deployment etcd-admin --type=NodePort --port=8080
+kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
 
 eval $(minikube docker-env)
 
-kubectl delete deployment recipe
-kubectl delete service recipe
+kubectl delete deployment etcd-admin
+kubectl delete service etcd-admin
 
-kubectl scale deployment recipe --replicas=3
+kubectl scale deployment etcd-admin --replicas=3
 
 // Open url for service
-minikube service recipe
-minikube service recipe --url
+minikube service etcd-admin
+minikube service etcd-admin --url
 ```
 
 ## Running minkube
@@ -28,18 +27,24 @@ minikube stop
 minikube delete
 ```
 
-## Installing etcd-admin with commands
+## Installing recipes with commands
 ```bash
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.16
-kubectl expose deployment recipe --type=LoadBalancer --port=8080
-kubectl scale deployment recipe --replicas=3
+kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.16
+kubectl create deployment etcd-election --image=pambrose/etcd-election:1.0.0
+
+kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
+kubectl expose deployment etcd-election --type=LoadBalancer --port=8080
+
+kubectl scale deployment etcd-admin --replicas=3
+kubectl scale deployment etcd-election --replicas=3
 ```
 
-## Installing etcd-admin with scripts
+## Installing recipes with scripts
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
-minikube service recipes-service
+minikube service admin-service
 kubectl delete deployment admin-deploy
+kubectl delete deployment election-deploy
 kubectl delete service admin-service
 ```
 
@@ -50,7 +55,8 @@ kubectl logs node_name
 
 ## Edit a deployment
 ```bash
-kubectl edit deploy/recipes-deploy
+kubectl edit deploy/admin-deploy
+kubectl edit deploy/election-deploy
 ```
 
 ## Installing etcd

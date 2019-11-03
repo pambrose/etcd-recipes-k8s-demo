@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'io.etcd'
-version '1.0.16'
+version '1.0.0'
 
 
 def kotlinVersion = '1.3.50'
@@ -79,16 +79,16 @@ shadowJar {
     mergeServiceFiles()
 }
 
-task basicsJar(type: Jar, dependsOn: shadowJar) {
-    archiveFileName = 'basics.jar'
+task adminJar(type: Jar, dependsOn: shadowJar) {
+    archiveFileName = 'etcd-admin.jar'
     manifest {
-        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.Basics')
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdAdmin')
     }
     from zipTree(shadowJar.archiveFile)
 }
 
 task electionJar(type: Jar, dependsOn: shadowJar) {
-    archiveFileName = 'election.jar'
+    archiveFileName = 'etcd-election.jar'
     manifest {
         attributes('Main-Class': 'io.etcd.recipes.examples.k8s.ElectionCandidate')
     }

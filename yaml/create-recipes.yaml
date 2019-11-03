@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: etcd-admin
-          image: pambrose/etcd-recipes-k8s-example:1.0.16
+          image: pambrose/etcd-admin:1.0.16
           ports:
             - containerPort: 8080
           env:
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: recipes-service
+  name: admin-service
 spec:
   selector:
     app: etcd-admin
@@ -57,9 +57,9 @@ spec:
     spec:
       containers:
         - name: etcd-admin
-          image: pambrose/etcd-recipes-k8s-example:1.0.16
+          image: pambrose/etcd-election:1.0.0
           ports:
-            - containerPort: 8080
+            - containerPort: 8081
           env:
             - name: SIMPLE_SERVICE_VERSION
               value: "0.1"
@@ -74,6 +74,6 @@ spec:
   selector:
     app: etcd-election
   ports:
-    - port: 8080
-      targetPort: 8080
+    - port: 8081
+      targetPort: 8081
   type: LoadBalancer

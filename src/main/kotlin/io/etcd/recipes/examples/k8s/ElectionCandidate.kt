@@ -6,10 +6,12 @@ import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.getValue
+import io.etcd.recipes.common.putValue
 import io.etcd.recipes.common.putValueWithKeepAlive
 import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.election.LeaderSelector
 import io.ktor.application.call
+import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
@@ -31,20 +33,23 @@ class ElectionCandidate {
         fun main(args: Array<String>) {
             val id = randomId()
             val className = ElectionCandidate::class.java.simpleName
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
+            val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
             val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
             val desc = "$className $id ${hostInfo.first} [${hostInfo.second}] $VERSION $startTime"
 
-            logger.info("Starting $desc")
+            logger.info { "Starting $desc" }
 
             thread {
                 val leadershipAction = { selector: LeaderSelector ->
-                    println("${selector.clientId} elected leader")
-                    val pause = Random.nextInt(1, 10).seconds
+                    val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
+                    val msg = "${selector.clientId} elected leader at $now"
+                    logger.info { msg }
+                    etcdExec(urls) { it.putValue(msgPath, msg) }
+                    val pause = Random.nextInt(2, 10).seconds
                     sleep(pause)
-                    println("${selector.clientId} surrendering after $pause")
+                    logger.info { "${selector.clientId} surrendering after $pause" }
                 }
                 try {
                     LeaderSelector(urls, electionPath, leadershipAction)
@@ -73,7 +78,7 @@ class ElectionCandidate {
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondWith("Version: $VERSION $desc")
+                            call.respondRedirect("/version", permanent = true)
                         }
                         get("/version") {
                             call.respondWith("Version: ${VERSION}")
@@ -97,7 +102,7 @@ class ElectionCandidate {
                                 finishLatch.countDown()
                             }
                             val msg = "Terminating $desc"
-                            logger.info(msg)
+                            logger.info { msg }
                             call.respondWith(msg)
                         }
                     }
@@ -107,7 +112,7 @@ class ElectionCandidate {
 
             finishLatch.await()
 
-            logger.info("Shutting down $desc")
+            logger.info { "Shutting down $desc" }
         }
     }
 

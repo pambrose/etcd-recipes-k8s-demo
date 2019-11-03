@@ -1,11 +1,12 @@
-VERSION=1.0.16
+ADMIN_VERSION=1.0.16
+ELECTION_VERSION=1.0.0
 
 default: versioncheck
 
 clean:
 	./gradlew clean
 
-compile:
+compile: clean
 	./gradlew build -x test
 
 jar:
@@ -17,16 +18,31 @@ tests:
 refresh:
 	./gradlew build --refresh-dependencies
 
-build-docker: clean compile
-	docker build -t pambrose/etcd-recipes-k8s-example:${VERSION} .
+build-admin:
+	./gradlew adminJar
+	docker build -f ./docker/admin.df -t pambrose/etcd-admin:${ADMIN_VERSION} .
 
-push-docker:
-	docker push pambrose/etcd-recipes-k8s-example:${VERSION}
+push-admin:
+	docker push pambrose/etcd-admin:${ADMIN_VERSION}
 
-run-docker:
-	docker run -p 8080:8080 pambrose/etcd-recipes-k8s-example:${VERSION}
+run-admin:
+	docker run -p 8080:8080 pambrose/etcd-admin:${ADMIN_VERSION}
 
-docker: build-docker push-docker
+build-election:
+	./gradlew electionJar
+	docker build -f ./docker/election.df -t pambrose/etcd-election:${ELECTION_VERSION} .
+
+push-election:
+	docker push pambrose/etcd-election:${ELECTION_VERSION}
+
+run-election:
+	docker run -p 8080:8080 pambrose/etcd-election:${ELECTION_VERSION}
+
+admin:  compile build-admin push-admin
+
+election: compile build-election push-election
+
+docker: compile build-admin build-election push-admin push-election
 
 versioncheck:
 	./gradlew dependencyUpdates
