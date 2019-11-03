@@ -1,4 +1,4 @@
-VERSION=1.0.15
+VERSION=1.0.16
 
 default: versioncheck
 
@@ -25,6 +25,8 @@ push-docker:
 
 run-docker:
 	docker run -p 8080:8080 pambrose/etcd-recipes-k8s-example:${VERSION}
+
+docker: build-docker push-docker
 
 versioncheck:
 	./gradlew dependencyUpdates

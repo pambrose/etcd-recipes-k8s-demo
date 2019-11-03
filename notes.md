@@ -3,7 +3,7 @@
 * [Service Discovery](http://kubernetesbyexample.com/sd/)
 
 ```bash 
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.15
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.16
 
 kubectl expose deployment recipe --type=NodePort --port=8080
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
@@ -28,19 +28,19 @@ minikube stop
 minikube delete
 ```
 
-## Installing etcd-recipes with commands
+## Installing etcd-admin with commands
 ```bash
-kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.15
+kubectl create deployment recipe --image=pambrose/etcd-recipes-k8s-example:1.0.16
 kubectl expose deployment recipe --type=LoadBalancer --port=8080
 kubectl scale deployment recipe --replicas=3
 ```
 
-## Installing etcd-recipes with scripts
+## Installing etcd-admin with scripts
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
 minikube service recipes-service
-kubectl delete deployment recipes-deploy
-kubectl delete service recipes-service
+kubectl delete deployment admin-deploy
+kubectl delete service admin-service
 ```
 
 ## View logs
@@ -50,7 +50,7 @@ kubectl logs node_name
 
 ## Edit a deployment
 ```bash
-kubectl edit deploy/etcd-recipes-deploy
+kubectl edit deploy/recipes-deploy
 ```
 
 ## Installing etcd
@@ -69,7 +69,6 @@ kubectl apply -f install/kubernetes/istio-demo.yaml
 
 ## Installing kiali
 https://stackoverflow.com/questions/23620827/envsubst-command-not-found-on-mac-os-x-10-8
-
 ```bash 
 bash <(curl -L https://git.io/getLatestKialiOperator) --accessible-namespaces '**'
 

@@ -1,5 +1,4 @@
 plugins {
-    id 'application'
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.50'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.50'
@@ -8,9 +7,8 @@ plugins {
 }
 
 group 'io.etcd'
-version '1.0.15'
+version '1.0.16'
 
-mainClassName = 'io.etcd.recipes.examples.k8s.Basics'
 
 def kotlinVersion = '1.3.50'
 def serializationVersion = '0.13.0'
@@ -76,3 +74,24 @@ compileTestKotlin {
                                        '-Xuse-experimental=io.ktor.util.KtorExperimentalAPI',
                                        '-Xuse-experimental=kotlinx.coroutines.InternalCoroutinesApi']
 }
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+task basicsJar(type: Jar, dependsOn: shadowJar) {
+    archiveFileName = 'basics.jar'
+    manifest {
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.Basics')
+    }
+    from zipTree(shadowJar.archiveFile)
+}
+
+task electionJar(type: Jar, dependsOn: shadowJar) {
+    archiveFileName = 'election.jar'
+    manifest {
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.ElectionCandidate')
+    }
+    from zipTree(shadowJar.archiveFile)
+}
+
