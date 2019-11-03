@@ -15,7 +15,7 @@ def serializationVersion = '0.13.0'
 def ktorVersion = '1.2.4'
 def jetcdVersion = '0.4.1'
 def utilsVersion = '1.0.1'
-def recipesVersion = '0.9.4'
+def recipesVersion = '0.9.5'
 def loggingVersion = '1.7.6'
 def slf4jVersion = '1.7.28'
 def kluentVersion = '1.56'
@@ -90,8 +90,15 @@ task adminJar(type: Jar, dependsOn: shadowJar) {
 task electionJar(type: Jar, dependsOn: shadowJar) {
     archiveFileName = 'etcd-election.jar'
     manifest {
-        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.ElectionCandidate')
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdElection')
     }
     from zipTree(shadowJar.archiveFile)
 }
 
+task counterJar(type: Jar, dependsOn: shadowJar) {
+    archiveFileName = 'etcd-counter.jar'
+    manifest {
+        attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdCounter')
+    }
+    from zipTree(shadowJar.archiveFile)
+}

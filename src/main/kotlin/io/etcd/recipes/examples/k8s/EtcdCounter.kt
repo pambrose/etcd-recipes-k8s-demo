@@ -1,15 +1,13 @@
 package io.etcd.recipes.examples.k8s
 
+import com.sudothought.common.concurrent.BooleanMonitor
 import com.sudothought.common.util.hostInfo
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
-import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
-import io.etcd.recipes.common.putValueWithKeepAlive
-import io.etcd.recipes.common.withKvClient
-import io.etcd.recipes.election.LeaderSelector
+import io.etcd.recipes.counter.DistributedAtomicLong
 import io.ktor.application.call
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
@@ -22,41 +20,35 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
-import kotlin.random.Random
 import kotlin.time.seconds
 
-class ElectionCandidate {
+class EtcdCounter {
     companion object : KLogging() {
         const val VERSION = "1.0.1"
 
         @JvmStatic
         fun main(args: Array<String>) {
             val id = randomId()
-            val className = ElectionCandidate::class.java.simpleName
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
-            val keepAliveLatch = CountDownLatch(1)
+            val className = EtcdCounter::class.java.simpleName
+            val port = Integer.parseInt(System.getProperty("PORT") ?: "8082")
             val finishLatch = CountDownLatch(1)
+            val endCounter = BooleanMonitor(false)
             val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
             val desc = "$className $id ${hostInfo.first} [${hostInfo.second}] $VERSION $startTime"
 
             logger.info { "Starting $desc" }
 
+            val keepAliveLatch = addKeepAliveClient(id, desc)
+
             thread {
-                val leadershipAction = { selector: LeaderSelector ->
-                    val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
-                    val msg = "${selector.clientId} elected leader at $now"
-                    logger.info { msg }
-                    etcdExec(urls) { it.putValue(msgPath, msg) }
-                    val pause = Random.nextInt(2, 10).seconds
-                    sleep(pause)
-                    logger.info { "${selector.clientId} surrendering after $pause" }
-                }
                 try {
-                    LeaderSelector(urls, electionPath, leadershipAction)
-                        .use { selector ->
+                    DistributedAtomicLong(urls, counterPath)
+                        .use { counter ->
                             while (true) {
-                                selector.start()
-                                selector.waitOnLeadershipComplete()
+                                counter.increment()
+                                if (endCounter.get())
+                                    break
+                                sleep(1.seconds)
                             }
                         }
                 } catch (e: Throwable) {
@@ -64,32 +56,22 @@ class ElectionCandidate {
                 }
             }
 
-            thread {
-                connectToEtcd(urls) { client ->
-                    client.withKvClient { kvClient ->
-                        kvClient.putValueWithKeepAlive(client, "$clientPath/$id", desc, 2) {
-                            keepAliveLatch.await()
-                        }
-                    }
-                }
-            }
-
             val httpServer =
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondRedirect("/version", permanent = true)
+                            call.respondRedirect("/desc", permanent = true)
                         }
-                        get("/version") {
-                            call.respondWith("Version: ${VERSION}")
-                        }
-                        get("/id") {
+                        get("/desc") {
                             call.respondWith(desc)
                         }
                         get("/ping") {
-                            var msg = "Success";
+                            var msg = "";
                             try {
-                                etcdExec(urls) { it.getValue(electionPath, "") }
+                                etcdExec(urls) {
+                                    it.putValue(pingPath, "pong")
+                                    msg = it.getValue(pingPath, "Missing key")
+                                }
                             } catch (e: Throwable) {
                                 msg = e.stackTraceAsString
                             }
@@ -98,6 +80,7 @@ class ElectionCandidate {
                         get("/terminate") {
                             thread {
                                 sleep(1.seconds)
+                                endCounter.set(true)
                                 keepAliveLatch.countDown()
                                 finishLatch.countDown()
                             }
@@ -115,5 +98,4 @@ class ElectionCandidate {
             logger.info { "Shutting down $desc" }
         }
     }
-
 }

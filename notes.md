@@ -4,10 +4,13 @@
 
 ```bash 
 
+kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.1
+kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
+kubectl scale deployment etcd-admin --replicas=3
+
 kubectl expose deployment etcd-admin --type=NodePort --port=8080
 kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
 
-eval $(minikube docker-env)
 
 kubectl delete deployment etcd-admin
 kubectl delete service etcd-admin
@@ -25,38 +28,38 @@ minikube start --memory=4096 --disk-size=30g --kubernetes-version=v1.16.2
 minikube dashboard
 minikube stop
 minikube delete
-```
 
-## Installing recipes with commands
-```bash
-kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.16
-kubectl create deployment etcd-election --image=pambrose/etcd-election:1.0.0
-
-kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
-kubectl expose deployment etcd-election --type=LoadBalancer --port=8080
-
-kubectl scale deployment etcd-admin --replicas=3
-kubectl scale deployment etcd-election --replicas=3
+eval $(minikube docker-env)
 ```
 
 ## Installing recipes with scripts
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-recipes.yaml
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-admin.yaml
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-election.yaml
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-counter.yaml
 minikube service admin-service
+
 kubectl delete deployment admin-deploy
 kubectl delete deployment election-deploy
+kubectl delete deployment counter-deploy
+
 kubectl delete service admin-service
+kubectl delete service election-service
+kubectl delete service counter-service
 ```
 
 ## View logs
 ```bash
-kubectl logs node_name
+kubectl logs admin-deploy
+kubectl logs election-deploy
+kubectl logs counter-deploy
 ```
 
 ## Edit a deployment
 ```bash
 kubectl edit deploy/admin-deploy
 kubectl edit deploy/election-deploy
+kubectl edit deploy/counter-deploy
 ```
 
 ## Installing etcd

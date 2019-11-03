@@ -1,5 +1,6 @@
-ADMIN_VERSION=1.0.16
-ELECTION_VERSION=1.0.0
+ADMIN_VERSION=1.0.1
+ELECTION_VERSION=1.0.1
+COUNTER_VERSION=1.0.1
 
 default: versioncheck
 
@@ -38,11 +39,23 @@ push-election:
 run-election:
 	docker run -p 8080:8080 pambrose/etcd-election:${ELECTION_VERSION}
 
+build-counter:
+	./gradlew counterJar
+	docker build -f ./docker/election.df -t pambrose/etcd-counter:${COUNTER_VERSION} .
+
+push-counter:
+	docker push pambrose/etcd-counter:${COUNTER_VERSION}
+
+run-counter:
+	docker run -p 8080:8080 pambrose/etcd-counter:${COUNTER_VERSION}
+
 admin:  compile build-admin push-admin
 
 election: compile build-election push-election
 
-docker: compile build-admin build-election push-admin push-election
+counter: compile build-counter push-counter
+
+docker: compile build-admin build-election build-counter push-admin push-election push-counter
 
 versioncheck:
 	./gradlew dependencyUpdates
