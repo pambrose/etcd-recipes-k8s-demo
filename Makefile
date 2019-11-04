@@ -41,7 +41,7 @@ run-election:
 
 build-counter:
 	./gradlew counterJar
-	docker build -f ./docker/election.df -t pambrose/etcd-counter:${COUNTER_VERSION} .
+	docker build -f ./docker/counter.df -t pambrose/etcd-counter:${COUNTER_VERSION} .
 
 push-counter:
 	docker push pambrose/etcd-counter:${COUNTER_VERSION}

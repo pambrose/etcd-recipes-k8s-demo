@@ -5,8 +5,11 @@ import com.sudothought.common.util.hostInfo
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
+import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
+import io.etcd.recipes.common.putValueWithKeepAlive
+import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.ktor.application.call
 import io.ktor.response.respondRedirect
@@ -28,17 +31,28 @@ class EtcdCounter {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val id = randomId()
-            val className = EtcdCounter::class.java.simpleName
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8082")
+            val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val endCounter = BooleanMonitor(false)
+            val id = randomId()
+            val className = EtcdCounter::class.java.simpleName
             val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
-            val desc = "$className $id ${hostInfo.first} [${hostInfo.second}] $VERSION $startTime"
+            val desc = "$className $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $VERSION $startTime"
 
             logger.info { "Starting $desc" }
 
-            val keepAliveLatch = addKeepAliveClient(id, desc)
+            thread {
+                connectToEtcd(urls) { client ->
+                    client.withKvClient { kvClient ->
+                        logger.info { "Keep-alive started for $desc" }
+                        kvClient.putValueWithKeepAlive(client, "$clientPath/$id", desc, keepAliveTtl) {
+                            keepAliveLatch.await()
+                            logger.info { "Keep-alive terminated for $desc" }
+                        }
+                    }
+                }
+            }
 
             thread {
                 try {

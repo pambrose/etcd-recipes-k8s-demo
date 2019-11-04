@@ -2,15 +2,12 @@ package io.etcd.recipes.examples.k8s
 
 import io.etcd.jetcd.KV
 import io.etcd.recipes.common.connectToEtcd
-import io.etcd.recipes.common.putValueWithKeepAlive
 import io.etcd.recipes.common.withKvClient
 import io.ktor.application.ApplicationCall
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.header
 import io.ktor.response.respondText
-import java.util.concurrent.CountDownLatch
-import kotlin.concurrent.thread
 
 const val TZ = "America/Los_Angeles"
 const val FMT = "M/d/y H:m:ss"
@@ -19,6 +16,7 @@ const val electionPath = "/election/k8s-demo"
 const val msgPath = "/msgs/leader"
 const val pingPath = "/msgs/ping"
 const val counterPath = "/counter/k8s-demo"
+const val keepAliveTtl = 10L
 
 val urls = listOf("http://etcd-client:2379", "http://localhost:2379")
 
@@ -37,18 +35,3 @@ fun etcdExec(urls: List<String>, block: (kvClient: KV) -> Unit) {
         }
     }
 }
-
-fun addKeepAliveClient(id: String, desc: String): CountDownLatch {
-    val keepAliveLatch = CountDownLatch(1)
-    thread {
-        connectToEtcd(urls) { client ->
-            client.withKvClient { kvClient ->
-                kvClient.putValueWithKeepAlive(client, "$clientPath/$id", desc, 2) {
-                    keepAliveLatch.await()
-                }
-            }
-        }
-    }
-    return keepAliveLatch
-}
-
