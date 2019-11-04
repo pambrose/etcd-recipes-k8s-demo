@@ -10,6 +10,12 @@ minikube delete
 eval $(minikube docker-env)
 ```
 
+## Install etcd
+https://github.com/etcd-io/etcd/tree/master/hack/kubernetes-deploy
+```bash
+kubectl create -f https://raw.githubusercontent.com/etcd-io/etcd/master/hack/kubernetes-deploy/etcd.yml
+```
+
 ## Install recipes with scripts
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-admin.yaml
@@ -34,15 +40,9 @@ kubectl logs pod_name
 
 ## Edit a deployment
 ```bash
-kubectl edit deploy/admin-deploy
-kubectl edit deploy/election-deploy
-kubectl edit deploy/counter-deploy
-```
-
-## Install etcd
-https://github.com/etcd-io/etcd/tree/master/hack/kubernetes-deploy
-```bash
-kubectl create -f https://raw.githubusercontent.com/etcd-io/etcd/master/hack/kubernetes-deploy/etcd.yml
+kubectl edit deployment/admin-deploy
+kubectl edit deployment/election-deploy
+kubectl edit deployment/counter-deploy
 ```
 
 ## Install istio

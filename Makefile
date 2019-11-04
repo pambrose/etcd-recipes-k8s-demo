@@ -55,6 +55,8 @@ election: compile build-election push-election
 
 counter: compile build-counter push-counter
 
+local: compile build-admin build-election build-counter
+
 docker: compile build-admin build-election build-counter push-admin push-election push-counter
 
 versioncheck:
