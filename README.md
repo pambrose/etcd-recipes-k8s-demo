@@ -79,7 +79,7 @@ kubectl api-versions
 
 ```bash 
 
-kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.2
+kubectl create deployment etcd-admin --image=pambrose/etcd-admin:1.0.17
 kubectl expose deployment etcd-admin --type=LoadBalancer --port=8080
 kubectl scale deployment etcd-admin --replicas=3
 

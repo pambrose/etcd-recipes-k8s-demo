@@ -16,11 +16,16 @@ import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.etcd.recipes.election.LeaderSelector.Companion.getParticipants
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
+import kotlinx.html.body
+import kotlinx.html.head
+import kotlinx.html.html
+import kotlinx.html.stream.appendHTML
 import mu.KLogging
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -31,7 +36,7 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : KLogging() {
-        const val VERSION = "1.0.2"
+        const val VERSION = "1.0.17"
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -68,6 +73,15 @@ class EtcdAdmin {
                         }
                         get("/desc") {
                             call.respondWith(desc)
+                        }
+                        get("/html") {
+                            val sbld = StringBuilder()
+                            val str =
+                                sbld.appendHTML().html {
+                                    head {}
+                                    body {}
+                                }
+                            call.respondWith(desc, ContentType.Text.Html)
                         }
                         get("/ping") {
                             var msg = "";

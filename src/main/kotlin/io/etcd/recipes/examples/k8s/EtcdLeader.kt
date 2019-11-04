@@ -27,11 +27,11 @@ import kotlin.time.seconds
 
 class EtcdLeader {
     companion object : KLogging() {
-        const val VERSION = "1.0.2"
+        const val VERSION = "1.0.17"
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
+            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
             val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val id = randomId()

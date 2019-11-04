@@ -16,9 +16,9 @@ spec:
     spec:
       containers:
         - name: etcd-election
-          image: pambrose/etcd-election:1.0.2
+          image: pambrose/etcd-election:1.0.17
           ports:
-            - containerPort: 8081
+            - containerPort: 8080
           env:
             - name: SIMPLE_SERVICE_VERSION
               value: "0.1"
@@ -33,6 +33,6 @@ spec:
   selector:
     app: etcd-election
   ports:
-    - port: 8081
-      targetPort: 8081
+    - port: 8080
+      targetPort: 8080
   type: LoadBalancer

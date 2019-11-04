@@ -16,9 +16,9 @@ spec:
     spec:
       containers:
         - name: etcd-counter
-          image: pambrose/etcd-counter:1.0.2
+          image: pambrose/etcd-counter:1.0.17
           ports:
-            - containerPort: 8082
+            - containerPort: 8080
           env:
             - name: SIMPLE_SERVICE_VERSION
               value: "0.1"
@@ -33,6 +33,6 @@ spec:
   selector:
     app: etcd-counter
   ports:
-    - port: 8082
-      targetPort: 8082
+    - port: 8080
+      targetPort: 8080
   type: LoadBalancer
