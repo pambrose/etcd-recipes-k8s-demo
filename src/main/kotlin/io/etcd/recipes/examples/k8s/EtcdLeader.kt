@@ -1,11 +1,9 @@
 package io.etcd.recipes.examples.k8s
 
 import com.sudothought.common.util.hostInfo
-import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.common.etcdExec
-import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
 import io.etcd.recipes.election.LeaderSelector
 import io.etcd.recipes.node.TtlNode
@@ -15,27 +13,19 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
-import mu.KLogging
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.random.Random
 import kotlin.time.seconds
 
 class EtcdLeader {
-    companion object : KLogging() {
-        const val VERSION = "1.0.18"
+    companion object : EtcdAbstract() {
+        const val VERSION = "1.0.19"
+        val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
+        val className = EtcdLeader::class.java.simpleName
+        val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
-            val finishLatch = CountDownLatch(1)
-            val id = randomId()
-            val className = EtcdLeader::class.java.simpleName
-            val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
-            val desc = "$className $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $VERSION $startTime"
 
             logger.info { "Starting $desc" }
 
@@ -43,13 +33,17 @@ class EtcdLeader {
 
             thread {
                 val leadershipAction = { selector: LeaderSelector ->
-                    val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
-                    val msg = "${selector.clientId} elected leader at $now"
-                    logger.info { msg }
-                    etcdExec(urls) { _, kvClient -> kvClient.putValue(msgPath, msg) }
+                    val now = localNow
                     val pause = Random.nextInt(2, 10).seconds
-                    sleep(pause)
-                    logger.info { "${selector.clientId} surrendering after $pause" }
+                    val electMsg = "${selector.clientId} elected leader at $now for $pause"
+                    logger.info { electMsg }
+                    etcdExec(urls) { _, kvClient -> kvClient.putValue(msgPath, electMsg) }
+                    TtlNode(urls, msgPath, electMsg, 2.seconds).start().use {
+                        sleep(pause)
+                    }
+                    val surrenderMsg = "${selector.clientId} surrendered after $pause"
+                    etcdExec(urls) { _, kvClient -> kvClient.putValue(msgPath, surrenderMsg) }
+                    logger.info { surrenderMsg }
                 }
                 try {
                     LeaderSelector(urls, electionPath, leadershipAction)
@@ -74,16 +68,7 @@ class EtcdLeader {
                             call.respondWith(desc)
                         }
                         get("/ping") {
-                            var msg = "";
-                            try {
-                                etcdExec(urls) { _, kvClient ->
-                                    kvClient.putValue(pingPath, "pong")
-                                    msg = kvClient.getValue(pingPath, "Missing key")
-                                }
-                            } catch (e: Throwable) {
-                                msg = e.stackTraceAsString
-                            }
-                            call.respondWith("Ping result: $msg")
+                            call.respondWith("Ping result: ${ping(urls)}")
                         }
                         get("/terminate") {
                             thread {

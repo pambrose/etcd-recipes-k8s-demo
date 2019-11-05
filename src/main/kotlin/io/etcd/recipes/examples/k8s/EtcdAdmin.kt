@@ -1,9 +1,7 @@
 package io.etcd.recipes.examples.k8s
 
 import com.sudothought.common.util.hostInfo
-import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
-import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.asString
 import io.etcd.recipes.common.delete
@@ -16,7 +14,6 @@ import io.etcd.recipes.election.LeaderSelector.Companion.getParticipants
 import io.etcd.recipes.node.TtlNode
 import io.ktor.application.call
 import io.ktor.http.ContentType
-import io.ktor.response.respondRedirect
 import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.cio.CIO
@@ -25,27 +22,19 @@ import kotlinx.html.body
 import kotlinx.html.head
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
-import mu.KLogging
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlin.time.seconds
 
 class EtcdAdmin {
-    companion object : KLogging() {
-        const val VERSION = "1.0.18"
+    companion object : EtcdAbstract() {
+        const val VERSION = "1.0.19"
+        val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
+        val className = EtcdAdmin::class.java.simpleName
+        val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
             val demoPath = "/demo/kvs"
-            val finishLatch = CountDownLatch(1)
-            val id = randomId()
-            val className = EtcdAdmin::class.java.simpleName
-            val startTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
-            val desc = "$className $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $VERSION $startTime"
 
             logger.info { "Starting $desc" }
 
@@ -57,10 +46,36 @@ class EtcdAdmin {
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            call.respondRedirect("/desc", permanent = true)
-                        }
-                        get("/desc") {
-                            call.respondWith(desc)
+                            var leader = "";
+                            etcdExec(urls) { _, kvClient ->
+                                leader = kvClient.getValue(msgPath, "$msgPath not present")
+                            }
+
+                            val clients =
+                                cache.currentData
+                                    .map { it.value.asString }.sorted()
+                                    .mapIndexed { i, s -> "${i + 1}) $s" }
+
+                            val participants =
+                                getParticipants(urls, electionPath)
+                                    .map { it.toString() }.sorted()
+                                    .mapIndexed { i, s -> "${i + 1}) $s" }
+
+                            // Do not indent because it will screw up html output
+                            val output = """
+Reported by: $desc $age
+
+Distributed count: ${DistributedAtomicLong(urls, counterPath).get()}
+
+Leader: $leader
+
+${participants.size} election participants:
+${participants.joinToString("\n")}
+
+${clients.size} clients:
+${clients.joinToString("\n")}
+                            """.trimIndent()
+                            call.respondWith(output)
                         }
                         get("/html") {
                             val sbld = StringBuilder()
@@ -71,17 +86,13 @@ class EtcdAdmin {
                                 }
                             call.respondWith(desc, ContentType.Text.Html)
                         }
+                        get("/keys") {
+                            var keys = emptyList<String>()
+                            etcdExec(urls) { _, kvClient -> keys = kvClient.getChildrenKeys("/").sorted() }
+                            call.respondWith("${keys.size} keys:\n\n${keys.joinToString("\n")}")
+                        }
                         get("/ping") {
-                            var msg = "";
-                            try {
-                                etcdExec(urls) { _, kvClient ->
-                                    kvClient.putValue(pingPath, "pong")
-                                    msg = kvClient.getValue(pingPath, "Missing key")
-                                }
-                            } catch (e: Throwable) {
-                                msg = e.stackTraceAsString
-                            }
-                            call.respondWith("Ping result: $msg")
+                            call.respondWith("Ping result: ${ping(urls)}")
                         }
                         get("/set") {
                             etcdExec(urls) { _, kvClient -> kvClient.putValue(demoPath, "This is a test") }
@@ -97,36 +108,6 @@ class EtcdAdmin {
                         get("/delete") {
                             etcdExec(urls) { _, kvClient -> kvClient.delete(demoPath) }
                             call.respondWith("Key $demoPath deleted")
-                        }
-                        get("/count") {
-                            val cnt = DistributedAtomicLong(urls, counterPath).get()
-                            call.respondWith("Distributed count = $cnt")
-                        }
-                        get("/dump") {
-                            var keys = emptyList<String>()
-                            etcdExec(urls) { _, kvClient -> keys = kvClient.getChildrenKeys("/").sorted() }
-                            call.respondWith("${keys.size} keys:\n\n${keys.joinToString("\n")}")
-                        }
-                        get("/clients") {
-                            val data =
-                                cache.currentData
-                                    .map { it.value.asString }.sorted()
-                                    .mapIndexed { i, s -> "${i + 1}) $s" }
-                            call.respondWith("${data.size} clients:\n\n${data.joinToString("\n")}\n\nReported by: $desc")
-                        }
-                        get("/leader") {
-                            var kval = "";
-                            etcdExec(urls) { _, kvClient -> kval = kvClient.getValue(msgPath, "$msgPath not present") }
-                            call.respondWith("Leader: $kval")
-                        }
-                        get("/election") {
-
-                            val participants = getParticipants(urls, electionPath)
-                            val data =
-                                participants
-                                    .map { it.toString() }.sorted()
-                                    .mapIndexed { i, s -> "${i + 1}) $s" }
-                            call.respondWith("${data.size} election participants:\n\n${data.joinToString("\n")}\n\nReported by: $desc")
                         }
                         get("/terminate") {
                             thread {
