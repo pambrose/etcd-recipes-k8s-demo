@@ -5,12 +5,11 @@ import com.sudothought.common.util.hostInfo
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
-import io.etcd.recipes.common.connectToEtcd
+import io.etcd.recipes.common.etcdExec
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
-import io.etcd.recipes.common.putValueWithKeepAlive
-import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
+import io.etcd.recipes.node.TtlNode
 import io.ktor.application.call
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
@@ -27,12 +26,11 @@ import kotlin.time.seconds
 
 class EtcdCounter {
     companion object : KLogging() {
-        const val VERSION = "1.0.17"
+        const val VERSION = "1.0.18"
 
         @JvmStatic
         fun main(args: Array<String>) {
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
-            val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val endCounter = BooleanMonitor(false)
             val id = randomId()
@@ -42,17 +40,7 @@ class EtcdCounter {
 
             logger.info { "Starting $desc" }
 
-            thread {
-                connectToEtcd(urls) { client ->
-                    client.withKvClient { kvClient ->
-                        logger.info { "Keep-alive started for $desc" }
-                        kvClient.putValueWithKeepAlive(client, "$clientPath/$id", desc, keepAliveTtl) {
-                            keepAliveLatch.await()
-                            logger.info { "Keep-alive terminated for $desc" }
-                        }
-                    }
-                }
-            }
+            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl).start()
 
             thread {
                 try {
@@ -82,9 +70,9 @@ class EtcdCounter {
                         get("/ping") {
                             var msg = "";
                             try {
-                                etcdExec(urls) {
-                                    it.putValue(pingPath, "pong")
-                                    msg = it.getValue(pingPath, "Missing key")
+                                etcdExec(urls) { _, kvClient ->
+                                    kvClient.putValue(pingPath, "pong")
+                                    msg = kvClient.getValue(pingPath, "Missing key")
                                 }
                             } catch (e: Throwable) {
                                 msg = e.stackTraceAsString
@@ -95,7 +83,7 @@ class EtcdCounter {
                             thread {
                                 sleep(1.seconds)
                                 endCounter.set(true)
-                                keepAliveLatch.countDown()
+                                clientNode.close()
                                 finishLatch.countDown()
                             }
                             val msg = "Terminating $desc"

@@ -1,8 +1,5 @@
 package io.etcd.recipes.examples.k8s
 
-import io.etcd.jetcd.KV
-import io.etcd.recipes.common.connectToEtcd
-import io.etcd.recipes.common.withKvClient
 import io.ktor.application.ApplicationCall
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -25,13 +22,5 @@ suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = 
         response.header("cache-control", "must-revalidate,no-cache,no-store")
         response.status(HttpStatusCode.OK)
         respondText(str, contentType)
-    }
-}
-
-fun etcdExec(urls: List<String>, block: (kvClient: KV) -> Unit) {
-    connectToEtcd(urls) { client ->
-        client.withKvClient { kvClient ->
-            block(kvClient)
-        }
     }
 }

@@ -6,15 +6,14 @@ import com.sudothought.common.util.sleep
 import com.sudothought.common.util.stackTraceAsString
 import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.asString
-import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.delete
+import io.etcd.recipes.common.etcdExec
 import io.etcd.recipes.common.getChildrenKeys
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
-import io.etcd.recipes.common.putValueWithKeepAlive
-import io.etcd.recipes.common.withKvClient
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.etcd.recipes.election.LeaderSelector.Companion.getParticipants
+import io.etcd.recipes.node.TtlNode
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.response.respondRedirect
@@ -36,13 +35,12 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : KLogging() {
-        const val VERSION = "1.0.17"
+        const val VERSION = "1.0.18"
 
         @JvmStatic
         fun main(args: Array<String>) {
             val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
             val demoPath = "/demo/kvs"
-            val keepAliveLatch = CountDownLatch(1)
             val finishLatch = CountDownLatch(1)
             val id = randomId()
             val className = EtcdAdmin::class.java.simpleName
@@ -51,17 +49,7 @@ class EtcdAdmin {
 
             logger.info { "Starting $desc" }
 
-            thread {
-                connectToEtcd(urls) { client ->
-                    client.withKvClient { kvClient ->
-                        logger.info { "Keep-alive started for $desc" }
-                        kvClient.putValueWithKeepAlive(client, "$clientPath/$id", desc, keepAliveTtl) {
-                            keepAliveLatch.await()
-                            logger.info { "Keep-alive terminated for $desc" }
-                        }
-                    }
-                }
-            }
+            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl).start()
 
             val cache = PathChildrenCache(urls, clientPath).start(true, true)
 
@@ -86,9 +74,9 @@ class EtcdAdmin {
                         get("/ping") {
                             var msg = "";
                             try {
-                                etcdExec(urls) {
-                                    it.putValue(pingPath, "pong")
-                                    msg = it.getValue(pingPath, "Missing key")
+                                etcdExec(urls) { _, kvClient ->
+                                    kvClient.putValue(pingPath, "pong")
+                                    msg = kvClient.getValue(pingPath, "Missing key")
                                 }
                             } catch (e: Throwable) {
                                 msg = e.stackTraceAsString
@@ -96,16 +84,18 @@ class EtcdAdmin {
                             call.respondWith("Ping result: $msg")
                         }
                         get("/set") {
-                            etcdExec(urls) { it.putValue(demoPath, "This is a test") }
+                            etcdExec(urls) { _, kvClient -> kvClient.putValue(demoPath, "This is a test") }
                             call.respondWith("Key $demoPath set")
                         }
                         get("/get") {
                             var kval = "";
-                            etcdExec(urls) { kval = it.getValue(demoPath, "$demoPath not present") }
+                            etcdExec(urls) { _, kvClient ->
+                                kval = kvClient.getValue(demoPath, "$demoPath not present")
+                            }
                             call.respondWith("Key value = $kval")
                         }
                         get("/delete") {
-                            etcdExec(urls) { it.delete(demoPath) }
+                            etcdExec(urls) { _, kvClient -> kvClient.delete(demoPath) }
                             call.respondWith("Key $demoPath deleted")
                         }
                         get("/count") {
@@ -114,7 +104,7 @@ class EtcdAdmin {
                         }
                         get("/dump") {
                             var keys = emptyList<String>()
-                            etcdExec(urls) { keys = it.getChildrenKeys("/").sorted() }
+                            etcdExec(urls) { _, kvClient -> keys = kvClient.getChildrenKeys("/").sorted() }
                             call.respondWith("${keys.size} keys:\n\n${keys.joinToString("\n")}")
                         }
                         get("/clients") {
@@ -126,7 +116,7 @@ class EtcdAdmin {
                         }
                         get("/leader") {
                             var kval = "";
-                            etcdExec(urls) { kval = it.getValue(msgPath, "$msgPath not present") }
+                            etcdExec(urls) { _, kvClient -> kval = kvClient.getValue(msgPath, "$msgPath not present") }
                             call.respondWith("Leader: $kval")
                         }
                         get("/election") {
@@ -142,7 +132,7 @@ class EtcdAdmin {
                             thread {
                                 sleep(1.seconds)
                                 cache.close()
-                                keepAliveLatch.countDown()
+                                clientNode.close()
                                 finishLatch.countDown()
                             }
                             val msg = "Terminating $desc"
