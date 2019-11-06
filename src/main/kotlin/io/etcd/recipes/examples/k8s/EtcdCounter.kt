@@ -16,8 +16,8 @@ import kotlin.concurrent.thread
 import kotlin.time.seconds
 
 class EtcdCounter {
-    companion object : EtcdAbstract() {
-        const val VERSION = "1.0.19"
+    companion object : EtcdService() {
+        const val VERSION = "1.0.20"
         val port = Integer.parseInt(System.getProperty("PORT") ?: "8082")
         val className = EtcdCounter::class.java.simpleName
         val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
@@ -28,7 +28,7 @@ class EtcdCounter {
 
             logger.info { "Starting $desc" }
 
-            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl).start()
+            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl)
 
             thread {
                 try {

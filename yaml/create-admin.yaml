@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: etcd-admin
-          image: pambrose/etcd-admin:1.0.19
+          image: pambrose/etcd-admin:1.0.20
           ports:
             - containerPort: 8080
           env:

@@ -18,8 +18,8 @@ import kotlin.random.Random
 import kotlin.time.seconds
 
 class EtcdLeader {
-    companion object : EtcdAbstract() {
-        const val VERSION = "1.0.19"
+    companion object : EtcdService() {
+        const val VERSION = "1.0.20"
         val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
         val className = EtcdLeader::class.java.simpleName
         val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
@@ -29,7 +29,7 @@ class EtcdLeader {
 
             logger.info { "Starting $desc" }
 
-            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl).start()
+            val clientNode = TtlNode(urls, "$clientPath/$id", desc, keepAliveTtl)
 
             thread {
                 val leadershipAction = { selector: LeaderSelector ->
@@ -38,9 +38,7 @@ class EtcdLeader {
                     val electMsg = "${selector.clientId} elected leader at $now for $pause"
                     logger.info { electMsg }
                     etcdExec(urls) { _, kvClient -> kvClient.putValue(msgPath, electMsg) }
-                    TtlNode(urls, msgPath, electMsg, 2.seconds).start().use {
-                        sleep(pause)
-                    }
+                    sleep(pause)
                     val surrenderMsg = "${selector.clientId} surrendered after $pause"
                     etcdExec(urls) { _, kvClient -> kvClient.putValue(msgPath, surrenderMsg) }
                     logger.info { surrenderMsg }

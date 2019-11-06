@@ -12,11 +12,15 @@ kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-dem
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-counter.yaml
 ```
 
-## Edit etcd-recipes deployments
+## Edit etcd-recipes 
 ```bash
 kubectl edit deployment/admin-deploy 
 kubectl edit deployment/election-deploy
 kubectl edit deployment/counter-deploy
+
+kubectl edit service/admin-service 
+kubectl edit service/election-service
+kubectl edit service/counter-service
 ```
 
 ## Uninstall etcd-recipes 

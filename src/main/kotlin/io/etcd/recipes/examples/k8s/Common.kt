@@ -26,7 +26,7 @@ suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = 
     }
 }
 
-open class EtcdAbstract : KLogging() {
+abstract class EtcdService : KLogging() {
     val TZ = "America/Los_Angeles"
     val FMT = "M/d/y H:m:ss"
     val clientPath = "/clients"
@@ -34,7 +34,7 @@ open class EtcdAbstract : KLogging() {
     val msgPath = "/msgs/leader"
     val pingPath = "/msgs/ping"
     val counterPath = "/counter/k8s-demo"
-    val keepAliveTtl = 10L
+    val keepAliveTtl = 2L
 
     val finishLatch = CountDownLatch(1)
 
@@ -47,7 +47,7 @@ open class EtcdAbstract : KLogging() {
     val age get() = startTime.elapsedNow()
 
     fun ping(urls: List<String>): String {
-        var msg = "";
+        var msg = ""
         try {
             etcdExec(urls) { _, kvClient ->
                 kvClient.putValue(pingPath, "pong")
