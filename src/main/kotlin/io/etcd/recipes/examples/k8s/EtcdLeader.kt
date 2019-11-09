@@ -19,10 +19,10 @@ import kotlin.time.seconds
 
 class EtcdLeader {
     companion object : EtcdService() {
-        const val VERSION = "1.0.20"
-        val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
-        val className = EtcdLeader::class.java.simpleName
-        val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
+        private const val VERSION = "1.0.20"
+        private val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
+        private val className: String = EtcdLeader::class.java.simpleName
+        private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
 
         @JvmStatic
         fun main(args: Array<String>) {

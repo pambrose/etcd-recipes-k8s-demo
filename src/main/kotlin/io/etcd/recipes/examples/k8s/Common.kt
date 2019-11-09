@@ -27,8 +27,8 @@ suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = 
 }
 
 abstract class EtcdService : KLogging() {
-    val TZ = "America/Los_Angeles"
-    val FMT = "M/d/y H:m:ss"
+    val tz = "America/Los_Angeles"
+    val fmt = "M/d/y H:m:ss"
     val clientPath = "/clients"
     val electionPath = "/election/k8s-demo"
     val msgPath = "/msgs/leader"
@@ -43,7 +43,7 @@ abstract class EtcdService : KLogging() {
     val startDesc = localNow
     val startTime = MonoClock.markNow()
 
-    val localNow get() = LocalDateTime.now().format(DateTimeFormatter.ofPattern(FMT).withZone(ZoneId.of(TZ)))
+    val localNow: String get() = LocalDateTime.now().format(DateTimeFormatter.ofPattern(fmt).withZone(ZoneId.of(tz)))
     val age get() = startTime.elapsedNow()
 
     fun ping(urls: List<String>): String {

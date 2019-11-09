@@ -27,10 +27,10 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : EtcdService() {
-        const val VERSION = "1.0.20"
-        val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
-        val className = EtcdAdmin::class.java.simpleName
-        val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
+        private const val VERSION = "1.0.20"
+        private val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
+        private val className: String = EtcdAdmin::class.java.simpleName
+        private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -46,7 +46,7 @@ class EtcdAdmin {
                 embeddedServer(CIO, port = port) {
                     routing {
                         get("/") {
-                            var leader = "";
+                            var leader = ""
                             etcdExec(urls) { _, kvClient ->
                                 leader = kvClient.getValue(msgPath, "$msgPath not present")
                             }
@@ -99,7 +99,7 @@ ${clients.joinToString("\n")}
                             call.respondWith("Key $demoPath set")
                         }
                         get("/get") {
-                            var kval = "";
+                            var kval = ""
                             etcdExec(urls) { _, kvClient ->
                                 kval = kvClient.getValue(demoPath, "$demoPath not present")
                             }
