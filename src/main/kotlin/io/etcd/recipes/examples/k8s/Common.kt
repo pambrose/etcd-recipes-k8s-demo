@@ -2,7 +2,7 @@ package io.etcd.recipes.examples.k8s
 
 import com.sudothought.common.util.randomId
 import com.sudothought.common.util.stackTraceAsString
-import io.etcd.recipes.common.etcdExec
+import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
 import io.ktor.application.ApplicationCall
@@ -49,9 +49,9 @@ abstract class EtcdService : KLogging() {
     fun ping(urls: List<String>): String {
         var msg = ""
         try {
-            etcdExec(urls) { _, kvClient ->
-                kvClient.putValue(pingPath, "pong")
-                msg = kvClient.getValue(pingPath, "Missing key")
+            connectToEtcd(urls) { client ->
+                client.putValue(pingPath, "pong")
+                msg = client.getValue(pingPath, "Missing key")
             }
         } catch (e: Throwable) {
             msg = e.stackTraceAsString
