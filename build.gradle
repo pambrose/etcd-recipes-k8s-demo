@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.50'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.50'
     id "com.github.ben-manes.versions" version "0.27.0"
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 group 'io.etcd'
@@ -14,7 +14,7 @@ sourceCompatibility = 1.8
 def kotlinVersion = '1.3.50'
 def serializationVersion = '0.13.0'
 def ktorVersion = '1.2.4'
-def htmlVersion = '0.6.10'
+def htmlVersion = '0.6.12'
 def jetcdVersion = '0.4.1'
 def utilsVersion = '1.0.5'
 def recipesVersion = '0.9.13'
