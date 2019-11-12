@@ -9,7 +9,7 @@ import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.putValue
 import io.etcd.recipes.election.LeaderSelector
 import io.etcd.recipes.election.withLeaderSelector
-import io.etcd.recipes.keyvalue.TransientKeyValue
+import io.etcd.recipes.keyvalue.withTransientKeyValue
 import io.ktor.application.call
 import io.ktor.response.respondRedirect
 import io.ktor.routing.get
@@ -22,33 +22,34 @@ import kotlin.time.seconds
 
 class EtcdLeader {
     companion object : EtcdService() {
-        private const val VERSION = "1.0.20"
+        private const val VERSION = "1.0.21"
         private val port = Integer.parseInt(System.getProperty("PORT") ?: "8081")
         private val className: String = EtcdLeader::class.java.simpleName
         private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
+        private val endElection = BooleanMonitor(false)
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val endElection = BooleanMonitor(false)
 
             logger.info { "Starting $desc" }
 
             connectToEtcd(urls) { client ->
-                TransientKeyValue(client, "$clientPath/$id", desc, keepAliveTtl).use {
+                withTransientKeyValue(client, "$clientPath/$id", desc, keepAliveTtl) {
+
+                    val leadershipAction = { selector: LeaderSelector ->
+                        val now = localNow
+                        val pause = Random.nextInt(2, 10).seconds
+                        val electMsg = "${selector.clientId} elected leader at $now for $pause"
+                        logger.info { electMsg }
+                        client.putValue(msgPath, electMsg)
+                        endElection.waitUntilTrue(pause)
+                        val surrenderMsg = "${selector.clientId} surrendered after $pause"
+                        client.putValue(msgPath, surrenderMsg)
+                        logger.info { surrenderMsg }
+                    }
 
                     thread {
                         try {
-                            val leadershipAction = { selector: LeaderSelector ->
-                                val now = localNow
-                                val pause = Random.nextInt(2, 10).seconds
-                                val electMsg = "${selector.clientId} elected leader at $now for $pause"
-                                logger.info { electMsg }
-                                client.putValue(msgPath, electMsg)
-                                endElection.waitUntilTrue(pause)
-                                val surrenderMsg = "${selector.clientId} surrendered after $pause"
-                                client.putValue(msgPath, surrenderMsg)
-                                logger.info { surrenderMsg }
-                            }
                             withLeaderSelector(client, electionPath, leadershipAction) {
                                 while (!endElection.get()) {
                                     start()

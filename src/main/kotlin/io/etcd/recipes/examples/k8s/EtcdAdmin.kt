@@ -12,7 +12,7 @@ import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue
 import io.etcd.recipes.counter.DistributedAtomicLong
 import io.etcd.recipes.election.LeaderSelector.Companion.getParticipants
-import io.etcd.recipes.keyvalue.TransientKeyValue
+import io.etcd.recipes.keyvalue.withTransientKeyValue
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.routing.get
@@ -27,19 +27,18 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : EtcdService() {
-        private const val VERSION = "1.0.20"
+        private const val VERSION = "1.0.21"
         private val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
         private val className: String = EtcdAdmin::class.java.simpleName
         private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
+        private val demoPath = "/demo/kvs"
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val demoPath = "/demo/kvs"
-
             logger.info { "Starting $desc" }
 
             connectToEtcd(urls) { client ->
-                TransientKeyValue(client, "$clientPath/$id", desc, keepAliveTtl).use {
+                withTransientKeyValue(client, "$clientPath/$id", desc, keepAliveTtl) {
                     PathChildrenCache(client, clientPath).start(true, true).use { cache ->
                         DistributedAtomicLong(client, counterPath).use { counter ->
 
@@ -105,7 +104,7 @@ ${clients.joinToString("\n")}
                                         }
                                         get("/terminate") {
                                             thread(finishLatch) {
-                                                sleep(1.seconds)
+                                                sleep(5.seconds)
                                             }
                                             val msg = "Terminating $desc"
                                             logger.info { msg }
