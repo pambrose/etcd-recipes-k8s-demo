@@ -17,7 +17,7 @@ def ktorVersion = '1.2.4'
 def htmlVersion = '0.6.10'
 def jetcdVersion = '0.4.1'
 def utilsVersion = '1.0.5'
-def recipesVersion = '0.9.12'
+def recipesVersion = '0.9.13'
 def loggingVersion = '1.7.6'
 def slf4jVersion = '1.7.28'
 def kluentVersion = '1.56'
@@ -105,4 +105,14 @@ task counterJar(type: Jar, dependsOn: shadowJar) {
         attributes('Main-Class': 'io.etcd.recipes.examples.k8s.EtcdCounter')
     }
     from zipTree(shadowJar.archiveFile)
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        exceptionFormat "full"
+        showStandardStreams = true
+    }
 }
