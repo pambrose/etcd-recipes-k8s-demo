@@ -60,23 +60,27 @@ sourceSets {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs += ['-Xuse-experimental=kotlin.time.ExperimentalTime',
-                                       '-Xuse-experimental=kotlinx.serialization.UnstableDefault',
-                                       '-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi',
-                                       '-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer',
-                                       '-Xuse-experimental=io.ktor.util.KtorExperimentalAPI',
-                                       '-Xuse-experimental=kotlinx.coroutines.InternalCoroutinesApi']
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += ['-Xuse-experimental=kotlin.time.ExperimentalTime',
+                             '-Xuse-experimental=kotlinx.serialization.UnstableDefault',
+                             '-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi',
+                             '-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer',
+                             '-Xuse-experimental=io.ktor.util.KtorExperimentalAPI',
+                             '-Xuse-experimental=kotlinx.coroutines.InternalCoroutinesApi']
+    }
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.freeCompilerArgs += ['-Xuse-experimental=kotlin.time.ExperimentalTime',
-                                       '-Xuse-experimental=kotlinx.serialization.UnstableDefault',
-                                       '-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi',
-                                       '-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer',
-                                       '-Xuse-experimental=io.ktor.util.KtorExperimentalAPI',
-                                       '-Xuse-experimental=kotlinx.coroutines.InternalCoroutinesApi']
+    kotlinOptions {
+        jvmTarget = "1.8"
+        freeCompilerArgs += ['-Xuse-experimental=kotlin.time.ExperimentalTime',
+                             '-Xuse-experimental=kotlinx.serialization.UnstableDefault',
+                             '-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi',
+                             '-Xuse-experimental=kotlinx.serialization.ImplicitReflectionSerializer',
+                             '-Xuse-experimental=io.ktor.util.KtorExperimentalAPI',
+                             '-Xuse-experimental=kotlinx.coroutines.InternalCoroutinesApi']
+    }
 }
 
 shadowJar {
