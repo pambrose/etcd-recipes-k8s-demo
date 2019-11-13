@@ -10,8 +10,8 @@ clean:
 compile: clean
 	./gradlew build -x test
 
-jar:
-	./gradlew shadowJar
+jars:
+	./gradlew adminJar electionJar counterJar
 
 tests:
 	./gradlew check
