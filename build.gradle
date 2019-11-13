@@ -60,6 +60,10 @@ sourceSets {
     }
 }
 
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
 compileKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
