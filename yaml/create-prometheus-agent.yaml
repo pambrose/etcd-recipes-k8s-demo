@@ -19,9 +19,9 @@ spec:
           image: pambrose/prometheus-agent:1.4.1
           ports:
             - containerPort: 8083
-              name: Metrics-port
+              name: metrics-port
             - containerPort: 8093
-              name: Admin-port
+              name: admin-port
           env:
             - name: SIMPLE_SERVICE_VERSION
               value: "0.1"
@@ -38,8 +38,8 @@ spec:
   ports:
     - port: 8083
       targetPort: 8083
-      name: Metrics-port
+      name: metrics-port
     - port: 8093
       targetPort: 8093
-      name: Admin-port
+      name: admin-port
   type: LoadBalancer
