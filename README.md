@@ -52,3 +52,18 @@ kubectl delete deployment agent-deploy
 kubectl delete service agent-service
 ```
 
+## Install network policy 
+```bash
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/1.0.22/yaml/create-prometheus-agent.yaml
+```
+## Edit network policy 
+```bash
+kubectl edit networkpolicy/agent-deploy 
+```
+
+## Uninstall network policy 
+```bash
+kubectl delete networkpolicy agent-deploy
+```
+
+
