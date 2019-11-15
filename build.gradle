@@ -10,14 +10,15 @@ group 'io.etcd'
 version '1.0.0'
 
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 def kotlinVersion = '1.3.50'
 def serializationVersion = '0.13.0'
 def ktorVersion = '1.2.4'
 def htmlVersion = '0.6.12'
 def jetcdVersion = '0.4.1'
-def utilsVersion = '1.0.5'
-def recipesVersion = '0.9.13'
+def utilsVersion = '1.1.2'
+def recipesVersion = '0.9.15'
 def loggingVersion = '1.7.6'
 def slf4jVersion = '1.7.28'
 def kluentVersion = '1.56'
@@ -36,7 +37,8 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion"
     implementation "com.github.pambrose:etcd-recipes:${recipesVersion}"
     implementation "io.etcd:jetcd-all:${jetcdVersion}"
-    implementation "com.github.pambrose:common-utils:${utilsVersion}"
+    implementation "com.github.pambrose.common-utils:core-utils:${utilsVersion}"
+    implementation "com.github.pambrose.common-utils:guava-utils:${utilsVersion}"
     implementation "io.ktor:ktor-server-core:${ktorVersion}"
     implementation "io.ktor:ktor-server-cio:${ktorVersion}"
     implementation "org.jetbrains.kotlinx:kotlinx-html-jvm:${htmlVersion}"

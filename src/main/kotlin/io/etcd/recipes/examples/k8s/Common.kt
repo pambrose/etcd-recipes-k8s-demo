@@ -1,7 +1,7 @@
 package io.etcd.recipes.examples.k8s
 
-import com.sudothought.common.util.randomId
-import com.sudothought.common.util.stackTraceAsString
+import com.github.pambrose.common.util.randomId
+import com.github.pambrose.common.util.stackTraceAsString
 import io.etcd.recipes.common.connectToEtcd
 import io.etcd.recipes.common.getValue
 import io.etcd.recipes.common.putValue

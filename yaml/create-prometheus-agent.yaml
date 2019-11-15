@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: admin-deploy
+  name: prometheus-agent-deploy
   labels:
-    app: etcd-admin
+    app: prometheus-agent
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: etcd-admin
+      app: prometheus-agent
   template:
     metadata:
       labels:
-        app: etcd-admin
+        app: prometheus-agent
     spec:
       containers:
-        - name: etcd-admin
-          image: pambrose/etcd-admin:1.0.22
+        - name: prometheus-agent
+          image: pambrose/prometheus-agent:1.4.1
           ports:
             - containerPort: 8080
           env:
@@ -28,10 +28,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: admin-service
+  name: prometheus-agent-service
 spec:
   selector:
-    app: etcd-admin
+    app: prometheus-agent
   ports:
     - port: 8080
       targetPort: 8080
