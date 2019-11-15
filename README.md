@@ -12,13 +12,6 @@ kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-dem
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-counter.yaml
 ```
 
-## Install prometheus-proxy 
-```bash
-kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/1.0.22/yaml/create-prometheus-agent.yaml
-```
-
-
-
 ## Edit etcd-recipes 
 ```bash
 kubectl edit deployment/admin-deploy 
@@ -40,3 +33,22 @@ kubectl delete service admin-service
 kubectl delete service election-service
 kubectl delete service counter-service
 ```
+
+## Install prometheus-proxy 
+```bash
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/1.0.22/yaml/create-prometheus-agent.yaml
+```
+## Edit prometheus-proxy 
+```bash
+kubectl edit deployment/agent-deploy 
+
+kubectl edit service/agent-service 
+```
+
+## Uninstall prometheus-proxy 
+```bash
+kubectl delete deployment agent-deploy
+
+kubectl delete service agent-service
+```
+

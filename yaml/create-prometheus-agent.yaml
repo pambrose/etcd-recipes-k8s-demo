@@ -24,7 +24,7 @@ spec:
               name: admin-port
           env:
             - name: AGENT_CONFIG
-              value: "https://raw.githubusercontent.com/pambrose/prometheus-proxy/master/examples/simple.conf"
+              value: "https://raw.githubusercontent.com/pambrose/config-data/master/prometheus-proxy/k8s-agent.conf"
             - name: AGENT_NAME
               value: prometheus-proxy-demo
 
