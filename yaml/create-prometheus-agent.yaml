@@ -23,8 +23,10 @@ spec:
             - containerPort: 8093
               name: admin-port
           env:
-            - name: SIMPLE_SERVICE_VERSION
-              value: "0.1"
+            - name: AGENT_CONFIG
+              value: "https://raw.githubusercontent.com/pambrose/prometheus-proxy/master/examples/simple.conf"
+            - name: AGENT_NAME
+              value: prometheus-proxy-demo
 
 ---
 
