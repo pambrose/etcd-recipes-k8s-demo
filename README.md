@@ -12,6 +12,13 @@ kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-dem
 kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/master/yaml/create-counter.yaml
 ```
 
+## Install prometheus-proxy 
+```bash
+kubectl apply -f https://raw.githubusercontent.com/pambrose/etcd-recipes-k8s-demo/1.0.22/yaml/create-prometheus-agent.yaml
+```
+
+
+
 ## Edit etcd-recipes 
 ```bash
 kubectl edit deployment/admin-deploy 
