@@ -23,6 +23,7 @@ def loggingVersion = '1.7.6'
 def slf4jVersion = '1.7.28'
 def kluentVersion = '1.56'
 def junitVersion = '5.5.2'
+def junitVersion = '5.5.2'
 
 repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }

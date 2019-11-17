@@ -65,5 +65,3 @@ kubectl edit networkpolicy/allow-all
 ```bash
 kubectl delete networkpolicy allow-all
 ```
-
-
