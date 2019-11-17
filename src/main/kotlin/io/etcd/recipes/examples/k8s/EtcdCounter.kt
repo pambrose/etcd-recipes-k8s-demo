@@ -19,7 +19,7 @@ import kotlin.time.seconds
 
 class EtcdCounter {
     companion object : EtcdService() {
-        private const val VERSION = "1.0.22"
+        private const val VERSION = "1.0.23"
         private val port = Integer.parseInt(System.getProperty("PORT") ?: "8082")
         private val className = EtcdCounter::class.java.simpleName
         private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"
