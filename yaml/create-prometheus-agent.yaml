@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-deploy
+  labels:
+    app: prometheus-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-agent
+  template:
+    metadata:
+      labels:
+        app: prometheus-agent
+    spec:
+      containers:
+        - name: prometheus-agent
+          image: pambrose/prometheus-agent:1.4.1
+          ports:
+            - containerPort: 8083
+              name: metrics-port
+            - containerPort: 8093
+              name: admin-port
+          env:
+            - name: AGENT_CONFIG
+              value: "https://raw.githubusercontent.com/pambrose/config-data/master/prometheus-proxy/k8s-agent.conf"
+            - name: AGENT_NAME
+              value: prometheus-proxy-demo
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-service
+spec:
+  selector:
+    app: prometheus-agent
+  ports:
+    - port: 8083
+      targetPort: 8083
+      name: metrics-port
+    - port: 8093
+      targetPort: 8093
+      name: admin-port
+  type: LoadBalancer

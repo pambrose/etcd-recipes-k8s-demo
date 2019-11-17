@@ -1,8 +1,8 @@
 package io.etcd.recipes.examples.k8s
 
-import com.sudothought.common.concurrent.thread
-import com.sudothought.common.util.hostInfo
-import com.sudothought.common.util.sleep
+import com.github.pambrose.common.concurrent.thread
+import com.github.pambrose.common.util.hostInfo
+import com.github.pambrose.common.util.sleep
 import io.etcd.recipes.cache.PathChildrenCache
 import io.etcd.recipes.common.asString
 import io.etcd.recipes.common.connectToEtcd
@@ -27,7 +27,7 @@ import kotlin.time.seconds
 
 class EtcdAdmin {
     companion object : EtcdService() {
-        private const val VERSION = "1.0.21"
+        private const val VERSION = "1.0.22"
         private val port = Integer.parseInt(System.getProperty("PORT") ?: "8080")
         private val className: String = EtcdAdmin::class.java.simpleName
         private val desc get() = "$className:$VERSION $id ${hostInfo.hostName} [${hostInfo.ipAddress}] $startDesc"

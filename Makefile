@@ -1,17 +1,19 @@
-ADMIN_VERSION=1.0.21
-ELECTION_VERSION=1.0.21
-COUNTER_VERSION=1.0.21
+ADMIN_VERSION=1.0.22
+ELECTION_VERSION=1.0.22
+COUNTER_VERSION=1.0.22
 
 default: versioncheck
 
 clean:
 	./gradlew clean
 
-compile: clean
-	./gradlew build -x test
+compile: build
 
-jar:
-	./gradlew shadowJar
+build: clean
+	./gradlew build -xtest
+
+jars:
+	./gradlew adminJar electionJar counterJar
 
 tests:
 	./gradlew check
