@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.50'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.50'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.60'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.3.60'
     id "com.github.ben-manes.versions" version '0.27.0'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
@@ -12,16 +12,17 @@ version '1.0.0'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def kotlinVersion = '1.3.50'
+def kotlinVersion = '1.3.60'
 def serializationVersion = '0.13.0'
 def ktorVersion = '1.2.4'
 def htmlVersion = '0.6.12'
+def recipesVersion = '0.9.17'
 def jetcdVersion = '0.4.1'
-def utilsVersion = '1.1.2'
-def recipesVersion = '0.9.15'
+def utilsVersion = '1.1.5'
 def loggingVersion = '1.7.6'
 def slf4jVersion = '1.7.28'
 def kluentVersion = '1.56'
+def junitVersion = '5.5.2'
 def junitVersion = '5.5.2'
 
 repositories {
@@ -35,7 +36,7 @@ repositories {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion"
-    implementation "com.github.pambrose:etcd-recipes:${recipesVersion}"
+    implementation "com.github.pambrose.etcd-recipes:etcd-recipes:${recipesVersion}"
     implementation "io.etcd:jetcd-all:${jetcdVersion}"
     implementation "com.github.pambrose.common-utils:core-utils:${utilsVersion}"
     implementation "com.github.pambrose.common-utils:guava-utils:${utilsVersion}"
