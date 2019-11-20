@@ -17,12 +17,13 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.CountDownLatch
 import kotlin.time.MonoClock
 
-
-suspend fun ApplicationCall.respondWith(str: String, contentType: ContentType = ContentType.Text.Plain) {
+suspend fun ApplicationCall.respondWith(str: String,
+                                        contentType: ContentType = ContentType.Text.Plain,
+                                        status: HttpStatusCode = HttpStatusCode.OK) {
     apply {
         response.header("cache-control", "must-revalidate,no-cache,no-store")
-        response.status(HttpStatusCode.OK)
-        respondText(str, contentType)
+        response.status(status)
+        respondText(str, contentType, status)
     }
 }
 
