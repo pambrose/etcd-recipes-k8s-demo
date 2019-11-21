@@ -17,6 +17,7 @@ spec:
       containers:
         - name: etcd-admin
           image: pambrose/etcd-admin:1.0.23
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:

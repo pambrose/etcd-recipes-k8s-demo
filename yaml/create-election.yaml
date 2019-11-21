@@ -17,6 +17,7 @@ spec:
       containers:
         - name: etcd-election
           image: pambrose/etcd-election:1.0.23
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
           env:

@@ -17,6 +17,7 @@ spec:
       containers:
         - name: prometheus-agent
           image: pambrose/prometheus-agent:1.4.5
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
               name: metrics-port
