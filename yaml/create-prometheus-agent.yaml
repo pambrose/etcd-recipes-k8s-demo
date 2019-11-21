@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: prometheus-agent
-          image: pambrose/prometheus-agent:1.4.4
+          image: pambrose/prometheus-agent:1.4.5
           ports:
             - containerPort: 8083
               name: metrics-port
