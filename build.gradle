@@ -35,7 +35,9 @@ repositories {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}"
+    implementation platform('org.jetbrains.kotlin:kotlin-bom')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion"
     implementation "com.github.pambrose.etcd-recipes:etcd-recipes:${recipesVersion}"
     implementation "io.etcd:jetcd-all:${jetcdVersion}"
